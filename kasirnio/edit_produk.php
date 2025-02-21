@@ -1,36 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Menu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #34495e;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #3498db;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #27ae60;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2ecc71;
+        }
+
+        button:focus {
+            outline: none;
+        }
+    </style>
+</head>
 <?php
-session_start();
-
-// Periksa apakah pengguna sudah login dan memiliki role admin
-if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {
-    echo "<script>alert('Akses ditolak. Anda bukan admin.');window.location.href='login_admin.php';</script>";
-    exit;
-}
-
 // Koneksi ke database
-$conn = new mysqli('localhost', 'root', '', 'kasirnio');
+$conn = new mysqli("localhost", "root", "", "kasirnio");
 
-// Cek koneksi
 if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 
-// Ambil data produk berdasarkan NamaProduk
-if (isset($_GET['nama'])) {
-    $nama = $conn->real_escape_string($_GET['nama']);
-    $query = "SELECT * FROM produk WHERE NamaProduk='$nama'";
-    $result = $conn->query($query);
+// Ambil data berdasarkan ID
+if (isset($_GET['NamaProduk'])) {
+    $namaProduk = $conn->real_escape_string($_GET['NamaProduk']); // Hindari SQL Injection
+    
+    // Gunakan prepared statement
+    $stmt = $conn->prepare("SELECT * FROM produk WHERE NamaProduk = ?");
+    $stmt->bind_param("s", $namaProduk);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
     } else {
-        echo "<script>alert('Produk tidak ditemukan!');window.location.href='admin_dashboard.php';</script>";
-        exit;
+        echo "<p>Menu tidak ditemukan.</p>";
+        exit();
     }
-} else {
-    echo "<script>alert('Akses tidak valid!');window.location.href='admin_dashboard.php';</script>";
-    exit;
+    $stmt->close();
 }
+
+// Update data setelah form disubmit
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $ProdukID = intval($_POST['ProdukID']);
+    $NamaProduk = $conn->real_escape_string($_POST['NamaProduk']);
+    $Harga = floatval($_POST['Harga']);
+    $Stok = intval($_POST['Stok']);
+
+    // Gunakan prepared statement untuk update
+    $stmt = $conn->prepare("UPDATE produk SET NamaProduk = ?, Harga = ?, Stok = ? WHERE ProdukID = ?");
+    $stmt->bind_param("sdii", $NamaProduk, $Harga, $Stok, $ProdukID);
+
+    if ($stmt->execute()) {
+        echo "<script>alert('Menu berhasil diperbarui!'); window.location.href = 'admin_dashboard.php';</script>";
+    } else {
+        echo "<p>Error: " . $conn->error . "</p>";
+    }
+    $stmt->close();
+}
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -38,87 +132,23 @@ if (isset($_GET['nama'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Produk</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f6fa;
-        }
-        .container {
-            max-width: 500px;
-            margin: 50px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #4CAF50;
-        }
-        form {
-            margin-top: 20px;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #388E3C;
-        }
-        .back-btn {
-            text-align: center;
-            margin-top: 10px;
-        }
-        .back-btn a {
-            text-decoration: none;
-            color: #4CAF50;
-            font-size: 16px;
-        }
-        .back-btn a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>Edit Menu</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Edit Produk</h1>
-        <form action="process_edit_produk.php" method="POST">
-            <input type="hidden" name="nama_lama" value="<?php echo htmlspecialchars($row['NamaProduk']); ?>">
-            <label for="nama">Nama Produk:</label>
-            <input type="text" name="nama" id="nama" value="<?php echo htmlspecialchars($row['NamaProduk'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
-
-            <label for="harga">Harga:</label>
-            <input type="number" name="harga" id="harga" value="<?php echo htmlspecialchars($row['harga'] ?? '0', ENT_QUOTES, 'UTF-8'); ?>" required>
-
-            <label for="stok">Stok:</label>
-            <input type="number" name="stok" id="stok" value="<?php echo htmlspecialchars($row['stok'] ?? '0', ENT_QUOTES, 'UTF-8'); ?>" required>
-
-            <button type="submit">Simpan Perubahan</button>
-        </form>
-        <div class="back-btn">
-            <a href="admin_dashboard.php">Kembali ke Dashboard</a>
-        </div>
-    </div>
+    <form method="POST" action="">
+        <h1>Edit Menu</h1>
+        <input type="hidden" name="ProdukID" value="<?php echo htmlspecialchars($row['ProdukID']); ?>">
+        
+        <label for="NamaProduk">Nama Produk:</label>
+        <input type="text" name="NamaProduk" id="NamaProduk" value="<?php echo htmlspecialchars($row['NamaProduk']); ?>" required />
+        
+        <label for="Harga">Harga:</label>
+        <input type="number" step="0.01" name="Harga" id="Harga" value="<?php echo htmlspecialchars($row['Harga']); ?>" required>
+        
+        <label for="Stok">Stok:</label>
+        <input type="number" name="Stok" id="Stok" value="<?php echo htmlspecialchars($row['Stok']); ?>" required>
+        
+        <button type="submit">Simpan</button>
+    </form>
 </body>
 </html>

@@ -32,11 +32,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($row["role"] == "admin") {
             header("Location: admin_dashboard.php");
         } else {
-            header("Location: petugas_dashboard.php");
+            header("Location: admin_dashboard.php");
         }
     } else {
         // Jika login gagal
-        echo "<script>alert('Username atau password salah!');window.location.href='login_admin.php';</script>";
+        echo "<script>alert('Username atau password salah!');window.location.href='login.php';</script>";
     }
 } else {
     echo "Akses tidak valid.";

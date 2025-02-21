@@ -12,7 +12,7 @@ if (!$conn) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash password
+    $password = $_POST['password']; // Hash password
     $role = $_POST['role'];
 
     $sql = "INSERT INTO user (username, password, role) VALUES ('$username', '$password', '$role')";

@@ -1,13 +1,13 @@
 <?php
 session_start();
 
-// Periksa apakah pengguna sudah login dan memiliki role admin
-if (!isset($_SESSION['username']) || $_SESSION['role'] != 'admin') {
-    echo "<script>alert('Akses ditolak. Anda bukan admin.');window.location.href='login_admin.php';</script>";
+// Periksa apakah pengguna sudah login dan memiliki role admin atau petugas
+if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['admin', 'petugas'])) {
+    echo "<script>alert('Akses ditolak. Anda bukan admin atau petugas.');window.location.href='login.php';</script>";
     exit;
 }
 
-$username = $_SESSION['username']; // Mendapatkan username admin yang login
+$username = $_SESSION['username']; // Mendapatkan username pengguna yang login
 
 // Koneksi ke database
 $conn = new mysqli('localhost', 'root', '', 'kasirnio');
@@ -18,7 +18,7 @@ if ($conn->connect_error) {
 }
 
 // Ambil data produk dari database
-$query = "SELECT NamaProduk, harga, stok FROM produk";
+$query = "SELECT NamaProduk, Harga, Stok FROM produk";
 $result = $conn->query($query);
 ?>
 
@@ -58,31 +58,43 @@ $result = $conn->query($query);
             margin-top: 20px;
         }
         .sidebar ul li {
-            margin: 20px 0;
+            margin: 15px 0;
         }
         .sidebar ul li a {
             text-decoration: none;
             color: white;
             font-size: 18px;
-            padding: 10px 20px;
+            padding: 12px 20px;
             display: block;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
         }
         .sidebar ul li a:hover {
             background-color: #388E3C;
-            border-radius: 5px;
+            transform: scale(1.05);
         }
-        .sidebar .logout {
+        .logout {
             margin-top: auto;
-            padding: 10px 20px;
+            padding: 15px;
             text-align: center;
             background-color: #f44336;
             border-radius: 5px;
             font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
         }
-        .sidebar .logout:hover {
+        .logout a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px 0;
+        }
+        .logout:hover {
             background-color: #d32f2f;
+            transform: scale(1.05);
         }
         .content {
             margin-left: 250px;
@@ -110,18 +122,21 @@ $result = $conn->query($query);
             background-color: #f1f1f1;
         }
         .btn {
-            padding: 8px 12px;
+            padding: 10px 16px;
             font-size: 14px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            font-weight: bold;
         }
         .btn-edit {
-            background-color: #4CAF50;
+            background-color: #FFC107;
             color: white;
         }
         .btn-edit:hover {
-            background-color: #388E3C;
+            background-color: #FFA000;
+            transform: scale(1.05);
         }
         .btn-delete {
             background-color: #f44336;
@@ -129,18 +144,19 @@ $result = $conn->query($query);
         }
         .btn-delete:hover {
             background-color: #d32f2f;
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <h2>Admin Panel</h2>
+        <h2>Panel</h2>
         <ul>
-            <li><a href="admin_dashboard.php">Dashboard</a></li>
-            <li><a href="tambahproduk.php">Tambah Produk</a></li>
+            <li><a href="admin_dashboard.php">🏠 Dashboard</a></li>
+            <li><a href="tambahproduk.php">➕ Tambah Produk</a></li>
         </ul>
         <div class="logout">
-            <a href="logout.php" style="color: white; text-decoration: none;">Logout</a>
+            <a href="logout.php">🚪 Logout</a>
         </div>
     </div>
 
@@ -160,14 +176,14 @@ $result = $conn->query($query);
             <tbody>
                 <?php
                 if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
+                    while ($row = $result->fetch_assoc()){
                         echo "<tr>
                             <td>" . htmlspecialchars($row['NamaProduk']) . "</td>
-                            <td>Rp " . number_format($row['harga'], 0, ',', '.') . "</td>
-                            <td>" . htmlspecialchars($row['stok']) . "</td>
+                            <td>Rp " . number_format($row['Harga'], 0, ',', '.') . "</td>
+                            <td>" . htmlspecialchars($row['Stok']) . "</td>
                             <td>
-                                <a href='edit_produk.php?nama=" . urlencode($row['NamaProduk']) . "' class='btn btn-edit'>Edit</a>
-                                <a href='process_delete_produk.php?nama=" . urlencode($row['NamaProduk']) . "' class='btn btn-delete' onclick=\"return confirm('Apakah Anda yakin ingin menghapus produk ini?');\">Hapus</a>
+                                <a href='edit_produk.php?NamaProduk=".urlencode($row['NamaProduk']) . "' class='btn btn-edit'>✏️ Edit</a>
+                                <a href='process_delete_produk.php?NamaProduk=" . urlencode($row['NamaProduk']) . "' class='btn btn-delete' onclick=\"return confirm('Apakah Anda yakin ingin menghapus produk ini?');\">🗑️ Hapus</a>
                             </td>
                         </tr>";
                     }
