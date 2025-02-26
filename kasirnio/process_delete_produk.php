@@ -1,56 +1,47 @@
 <?php
-// Mulai sesi
 session_start();
 
-// Aktifkan error reporting untuk debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Periksa apakah pengguna sudah login dan memiliki hak akses (admin atau petugas)
+// Periksa apakah pengguna sudah login dan memiliki role admin atau petugas
 if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['admin', 'petugas'])) {
-    echo "<script>alert('Akses ditolak. Anda tidak memiliki izin.');window.location.href='login.php';</script>";
+    echo "<script>alert('Akses ditolak. Anda bukan admin atau petugas.');window.location.href='login.php';</script>";
     exit;
 }
 
 // Koneksi ke database
 $conn = new mysqli('localhost', 'root', '', 'kasirnio');
 
-// Cek koneksi database
+// Cek koneksi
 if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
-// Pastikan parameter 'id' dikirim dan merupakan bilangan bulat yang valid
-if (isset($_GET['id']) && filter_var($_GET['id'], FILTER_VALIDATE_INT) !== false) {
-    $ProdukID = intval($_GET['id']);
+// Periksa apakah parameter NamaProduk ada
+if (isset($_GET['NamaProduk'])) {
+    $NamaProduk = $_GET['NamaProduk']; // Mengambil nama produk dari URL
 
-    // Cek apakah produk dengan ID tersebut ada
-    $check_stmt = $conn->prepare("SELECT ProdukID FROM produk WHERE ProdukID = ?");
-    $check_stmt->bind_param("i", $ProdukID);
-    $check_stmt->execute();
-    $result = $check_stmt->get_result();
+    // Query untuk menghapus produk berdasarkan NamaProduk
+    $sql = "DELETE FROM produk WHERE NamaProduk = ?";
+    
+    if ($stmt = $conn->prepare($sql)) {
+        // Bind parameter
+        $stmt->bind_param("s", $NamaProduk); // 's' menunjukkan bahwa parameter ini adalah string
 
-    if ($result->num_rows > 0) {
-        // Produk ditemukan, lanjutkan penghapusan
-        $stmt = $conn->prepare("DELETE * FROM produk WHERE ProdukID = ?");
-        $stmt->bind_param("i", $ProdukID);
-
+        // Eksekusi query
         if ($stmt->execute()) {
-            echo "<script>alert('Produk berhasil dihapus!');window.location.href='admin_dashboard.php';</script>";
+            echo "<script>alert('Produk berhasil dihapus!'); window.location.href = 'admin_dashboard.php';</script>";
         } else {
-            echo "<script>alert('Gagal menghapus produk: " . $stmt->error . "');window.location.href='admin_dashboard.php';</script>";
+            echo "<script>alert('Gagal menghapus produk.'); window.location.href = 'admin_dashboard.php';</script>";
         }
 
+        // Menutup statement
         $stmt->close();
     } else {
-        echo "<script>alert('Produk dengan ID ini tidak ditemukan!');window.location.href='admin_dashboard.php';</script>";
+        echo "<script>alert('Terjadi kesalahan dalam query.'); window.location.href = 'admin_dashboard.php';</script>";
     }
-
-    $check_stmt->close();
 } else {
-    echo "<script>alert('Parameter ID produk tidak valid!');window.location.href='admin_dashboard.php';</script>";
+    echo "<script>alert('Parameter NamaProduk tidak ditemukan.'); window.location.href = 'admin_dashboard.php';</script>";
 }
 
-// Tutup koneksi database
+// Menutup koneksi
 $conn->close();
 ?>
