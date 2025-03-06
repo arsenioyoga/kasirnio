@@ -125,7 +125,6 @@
                 <i class='bx bx-user-circle'></i>
             </div>
             <button type="submit" class="btn">Register</button>
-            <p>Already have an account? <a href="login.php">Login</a></p>
         </form>
     </div>
 </body>

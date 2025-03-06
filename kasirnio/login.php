@@ -127,7 +127,6 @@
                 <i id="password-icon" class='bx bx-lock'></i>
             </div>
             <button type="submit" class="btn">Login</button>
-            <p>Don't have an account? <a href="register.php">Register</a></p>
         </form>
     </div>
 

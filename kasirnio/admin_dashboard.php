@@ -8,6 +8,7 @@ if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['admin', 'pet
 }
 
 $username = $_SESSION['username']; // Mendapatkan username pengguna yang login
+$role = $_SESSION['role']; // Mendapatkan role pengguna
 
 // Koneksi ke database
 $conn = new mysqli('localhost', 'root', '', 'kasirnio');
@@ -154,6 +155,10 @@ $result = $conn->query($query);
         <ul>
             <li><a href="admin_dashboard.php">🏠 Dashboard</a></li>
             <li><a href="tambahproduk.php">➕ Tambah Produk</a></li>
+
+            <?php if ($role === 'admin'): // Hanya admin yang bisa melihat tombol ini ?>
+                <li><a href="register.php" style="background-color: #ff9800;">📝 Registrasi Pengguna</a></li>
+            <?php endif; ?>
         </ul>
         <div class="logout">
             <a href="logout.php">🚪 Logout</a>
